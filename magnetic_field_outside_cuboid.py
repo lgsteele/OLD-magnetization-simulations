@@ -1,5 +1,10 @@
 '''
 Using Python Version 2.7.12
+
+Notes/References:
+    np.zeros([rows,columns])
+    form combination array using list comprehension:
+    https://stackoverflow.com/questions/11144513/numpy-cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points
 '''
 
 import numpy as np
@@ -12,12 +17,7 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
                       xsteps,ysteps,zsteps,\
                       Xsteps,Ysteps,Zsteps,\
                       Mx,My,Mz):
-    ##############
-    # Generate cubic sample volume containing magnetization
-    # Note: np.zeroes([rows,columns])
-    # Note: form combination array using list comprehension:
-    #       https://stackoverflow.com/questions/11144513/numpy-cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points
-    ##############
+
     #Convert input variables to floats so as not to run
     #into any division by zero / integer rounding errors
     x1,x2,y1,y2,z1,z2,\
@@ -46,7 +46,7 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
 
     #Generate volume of cube to assess magnetic field
     #use x2+xstep/2 to include x1 and x2 in array
-    #10um laser spot size
+    #Note: 10um laser spot size
     Xstep = (X2-X1)/Xsteps
     XArray = np.arange(X1,X2+Xstep/2,Xstep)
     Ystep = (Y2-Y1)/Ysteps
@@ -58,13 +58,13 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
                                        for z0 in ZArray])
 ##    print XYZArray
     
-    #Generate magnetic field array;
+    #Generate empty magnetic field array;
     #Equal in size to XYZArray
     BArray = np.zeros([len(XYZArray),3])
     
     #Generate magnetization and magnetic moment vectors
     #Magnetic moment per atom of Co (bulk): mu = 1.71*uB/atom
-    #Density of Co: rho = 8.90 g/cm3
+    #Density of Co: rho = 8.90 g/cm3 = 8900 kg/m3
     #Molar mass of Co: MM = 58.9332 g/mol
     #Avogadro's Constant: N = 6.022e23 atoms/mol
     #Magnetic moment of volume of Co: [(mu * N * rho) / (MM)] * dV
@@ -73,10 +73,10 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
     molmass = 58.9332 # g / mol
     Navo = 6.022*(10**23) # atoms / mol
     M = (mu * Navo * rho) / molmass
-##    Marray = np.array([0,0,M])
+    Marray = np.array([0,0,M])
 ##    Marray = np.array([0,M,0])
 ##    Marray = np.array([0,M/np.sqrt(2),M/np.sqrt(2)])
-    Marray = np.array([M/np.sqrt(3),M/np.sqrt(3),M/np.sqrt(3)])
+##    Marray = np.array([M/np.sqrt(3),M/np.sqrt(3),M/np.sqrt(3)])
     dVx = xstep
     dVy = ystep
     dVz = zstep
@@ -84,7 +84,7 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
     m = Marray * dV
     
     
-    #Dipole field calculation
+    #Dipole field calculation function
     def Bdip(a,b):
         mu0 = 4*np.pi*(10**(-7)) # T m / A
         r = (XYZArray[a,:]-xyzArray[b,:])
@@ -92,14 +92,9 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
         rhat = r/(rmag)
         return (mu0/(4*np.pi))*(1/(rmag**3))*(3*np.inner(m,rhat)*rhat-m)
 
+    #Determine vector field in region of interest (XYZArray)
     for i in range(0,len(xyzArray),1): # i is the magnetized sample volume
         for j in range(0,len(XYZArray),1): # j is the volume of interest
-##            if xyzArray[i,0] == XYZArray[j,0] and \
-##               xyzArray[i,1] == XYZArray[j,1] and \
-##               xyzArray[i,2] == XYZArray[j,2]:
-##                pass
-##            else:
-##            print 'mu = ' + str(4*np.pi*(10**(-7)))
             BArray[j,:] = BArray[j,:]+Bdip(j,i)
 
 ##            print 'xyzArray = ' + str(xyzArray[i,:])
@@ -123,28 +118,23 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
 ##            print BArray
             
 
-    #Calculate length of magnetic field vectors
-    #for use in plotting
-##    BampArray = np.zeros([len(BArray),1])
-##    for i in range(0,len(BampArray),1):
-##        BampArray[i] = np.linalg.norm(BArray[i,:])*(10**5)
-##    BArray = np.column_stack((BArray, BampArray))
-##    print BArray
+    #Generate vectorfield array and save to txt file
+    vectorfield = np.column_stack((XYZArray,BArray))
+    np.savetxt('vectorfield.txt', vectorfield, delimiter = ', ', \
+               comments = 'X, Y, Z, Bx, By, Bz')
+
+
+    #Calculate avg/stderr of Bz in region of interest
+    #and save to file
+    BavgArray = np.array([np.average(vectorfield[:,3]),np.average(vectorfield[:,4]),np.average(vectorfield[:,5]),\
+                          np.std(vectorfield[:,3]),np.std(vectorfield[:,4]),np.std(vectorfield[:,5])])
+    np.savetxt('BavgArray.txt', BavgArray, delimiter = ', ', \
+               comments = 'Bxavg, Byavg, Bzavg, Bxstd, Bystd, Bzstd')
+    
+
 
     BNormArray = BArray/(10000*np.amax(BArray))
-##    print BNormArray
     vectorfieldplotting = np.column_stack((XYZArray,BNormArray))
-    vectorfield = np.column_stack((XYZArray,BArray))
-##    print vectorfield
-
-    # Calculate avg/stderr of Bz in region of interest
-    print 'Bx avg = ' + str(np.average(vectorfield[:,3]))
-    print 'Bx stdev = ' + str(np.std(vectorfield[:,3]))
-    print 'By avg = ' + str(np.average(vectorfield[:,4]))
-    print 'By stdev = ' + str(np.std(vectorfield[:,4]))
-    print 'Bz average = ' + str(np.average(vectorfield[:,5]))
-    print 'Bz stdev = ' + str(np.std(vectorfield[:,5]))
-    
     try:
         x,y,z,u,v,w = zip(*vectorfieldplotting)
         fig = plt.figure()
@@ -181,30 +171,13 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
 ##                      Xsteps,Ysteps,Zsteps,\
 ##                      Mx,My,Mz):
 # Mz
-magneticFieldCalc(.0012,.0018,.0012,.0018,.002,.0026,\
-                  .0014,.0016,.0014,.0016,.0012,.0016,\
-                  5,5,5,\
-                  5,5,5,\
-                  0,0,1)
-##magneticFieldCalc(1,2,1,2,2,3,\
-##                  1,2,1,2,1,2,\
+##magneticFieldCalc(.001,.002,.001,.002,.002,.003,\
+##                  .0014,.0016,.0014,.0016,.0014,.0016,\
 ##                  5,5,5,\
 ##                  5,5,5,\
 ##                  0,0,1)
-
-
-
-
-
-##m = np.array([0,0,1])
-##xyztmp = np.array([0,0,0])
-##XYZtmp = np.array([0,0,.001])
-##print XYZtmp-xyztmp
-##def Bdiptest():
-##    mu0 = 4*np.pi*10**(-7) # T m / A
-##    r = (XYZtmp-xyztmp)
-##    print r
-##    rhat = r/(np.linalg.norm(XYZtmp-xyztmp))
-##    print rhat
-##    print (mu0/(4*np.pi))*(1/np.linalg.norm(r)**3)*(3*m.dot(rhat)*rhat-m)
-##Bdiptest()
+##magneticFieldCalc(1,2,1,2,2,3,\
+##                  1,3,1,3,1,3,\
+##                  5,5,5,\
+##                  5,5,5,\
+##                  0,0,1)
