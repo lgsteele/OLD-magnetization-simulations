@@ -1,14 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-from magnetic_field_outside_cuboid import magneticFieldCalc
+from magnetic_field_outside_uniformly_magnetized_cuboid import magneticFieldCalc
 from NVeigenvalues import eigenvalues
 from lor8 import lor8
 
 
 
 magneticFieldCalc(.0011,.0019,.0011,.0019,.002,.0028,\
-                  .0015,.0017,.0014,.0016,.0014,.0016,\
+                  .0014,.0016,.0014,.0016,.0014,.0016,\
                   5,5,5,\
                   5,5,5,\
                   0,0,1)
@@ -51,9 +52,18 @@ zfSpectra = lor8(freq,zfArray,ampArray,zfEV)
 
 
 
-#Plot results
+#Plot vectorfield and spectra results
+#First need to upload vectorfield data
+vectorfield = np.loadtxt('vectorfield.txt', delimiter = ', ', unpack=False)
+#Next comes the actual plotting
 try:
-    plt.plot(freq,simulatedSpectra,'r',freq,zfSpectra,'b-')
+    x,y,z,Bx,By,Bz = zip(*vectorfield)
+    fig = plt.figure(figsize=plt.figaspect(1.))    
+    ax = fig.add_subplot(211,projection='3d')
+    ax.quiver(x,y,z,Bx,By,Bz,pivot='middle',length=.2,normalize=False)
+    ax = fig.add_subplot(212)
+    ax.plot(freq,zfSpectra,'b-',freq,simulatedSpectra,'r-')
+    plt.draw()
     plt.show()
 except KeyboardInterrupt:
     plt.ioff()

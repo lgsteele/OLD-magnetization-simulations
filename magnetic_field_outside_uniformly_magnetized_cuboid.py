@@ -73,8 +73,9 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
     molmass = 58.9332 # g / mol
     Navo = 6.022*(10**23) # atoms / mol
     M = (mu * Navo * rho) / molmass
-    Marray = np.array([0,0,M])
-##    Marray = np.array([0,M,0])
+    Marray = np.array([Mx,My,Mz])
+    Marray = (Marray/np.linalg.norm(Marray)) * M
+##    Marray = np.array([0,0,M])
 ##    Marray = np.array([0,M/np.sqrt(2),M/np.sqrt(2)])
 ##    Marray = np.array([M/np.sqrt(3),M/np.sqrt(3),M/np.sqrt(3)])
     dVx = xstep
@@ -130,54 +131,3 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
                           np.std(vectorfield[:,3]),np.std(vectorfield[:,4]),np.std(vectorfield[:,5])])
     np.savetxt('BavgArray.txt', BavgArray, delimiter = ', ', \
                comments = 'Bxavg, Byavg, Bzavg, Bxstd, Bystd, Bzstd')
-    
-
-
-    BNormArray = BArray/(10000*np.amax(BArray))
-    vectorfieldplotting = np.column_stack((XYZArray,BNormArray))
-    try:
-        x,y,z,u,v,w = zip(*vectorfieldplotting)
-        fig = plt.figure()
-    ##    ax = fig.gca(projection='3d')
-    ##    ax = plt.gca()
-        ax = fig.add_subplot(111,projection='3d')
-    ##    x, y, z = np.meshgrid(np.arange(-1, 2, 0.5),
-    ##                      np.arange(-1, 2, 0.5),
-    ##                      np.arange(-1, 2, 0.5))
-    ##    ax.quiver(vectorfield[:,0],vectorfield[:,1],vectorfield[:,2],\
-    ##              vectorfield[:,3],vectorfield[:,4],vectorfield[:,5])
-##        x = np.array([x1,x2])
-##        ax.plot(x,y1,)
-        ax.quiver(x,y,z,u,v,w,pivot='middle',normalize=False)
-##        ax.set_xlim(-.1,3.1,.1)
-##        ax.set_ylim(-.1,3.1,.1)
-##        ax.set_zlim(-.1,3.1,.1)
-        plt.draw()
-        plt.show()
-    except KeyboardInterrupt:
-        plt.ioff()
-        plt.close()
-        os._exit(0)
-
-    
-
-
-
-
-
-##magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
-##                      X1,X2,Y1,Y2,Z1,Z2,\
-##                      xsteps,ysteps,zsteps\
-##                      Xsteps,Ysteps,Zsteps,\
-##                      Mx,My,Mz):
-# Mz
-##magneticFieldCalc(.001,.002,.001,.002,.002,.003,\
-##                  .0014,.0016,.0014,.0016,.0014,.0016,\
-##                  5,5,5,\
-##                  5,5,5,\
-##                  0,0,1)
-##magneticFieldCalc(1,2,1,2,2,3,\
-##                  1,3,1,3,1,3,\
-##                  5,5,5,\
-##                  5,5,5,\
-##                  0,0,1)
