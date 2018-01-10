@@ -12,7 +12,7 @@ magneticFieldCalc(.0011,.0019,.0011,.0019,.002,.0028,\
                   .0014,.0016,.0014,.0016,.0014,.0016,\
                   5,5,5,\
                   5,5,5,\
-                  0,0,1)
+                  0,1,1)
 
 #Upload Bavg data from magneticFieldCalc
 Bxavg, Byavg, Bzavg, Bxstd, Bystd, Bzstd = \
