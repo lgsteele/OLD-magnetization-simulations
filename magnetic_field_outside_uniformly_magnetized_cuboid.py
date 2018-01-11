@@ -69,15 +69,12 @@ def magneticFieldCalc(x1,x2,y1,y2,z1,z2,\
     #Avogadro's Constant: N = 6.022e23 atoms/mol
     #Magnetic moment of volume of Co: [(mu * N * rho) / (MM)] * dV
     mu = 1.71 * (9.274*(10**(-24))) # J / (T atom)
-    rho = 8900. # kg / m3
+    rho = 8900000. # kg / m3
     molmass = 58.9332 # g / mol
     Navo = 6.022*(10**23) # atoms / mol
     M = (mu * Navo * rho) / molmass
     Marray = np.array([Mx,My,Mz])
     Marray = (Marray/np.linalg.norm(Marray)) * M
-##    Marray = np.array([0,0,M])
-##    Marray = np.array([0,M/np.sqrt(2),M/np.sqrt(2)])
-##    Marray = np.array([M/np.sqrt(3),M/np.sqrt(3),M/np.sqrt(3)])
     dVx = xstep
     dVy = ystep
     dVz = zstep

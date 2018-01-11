@@ -12,7 +12,7 @@ magneticFieldCalc(.0011,.0019,.0011,.0019,.002,.0028,\
                   .0014,.0016,.0014,.0016,.0014,.0016,\
                   5,5,5,\
                   5,5,5,\
-                  0,1,1)
+                  0,1,0)
 
 #Upload Bavg data from magneticFieldCalc
 Bxavg, Byavg, Bzavg, Bxstd, Bystd, Bzstd = \
@@ -37,8 +37,8 @@ simulatedEV = eigenvalues(zfArray, BxyzArray)
 zeroB = np.array([0,0,0,0,0,0])
 zfEV = eigenvalues(zfArray, zeroB)
 #Print eigenvalues for reference
-print 'ZF: ' + str(zfEV)
-print 'simulated: ' + str(simulatedEV)
+print 'ZF: ' + str(zfEV) + '\n'
+print 'simulated: ' + str(simulatedEV) + '\n'
 print (simulatedEV[6] - simulatedEV[1])/2
 print (zfEV[6] - zfEV[1])/2
 
@@ -46,7 +46,7 @@ print (zfEV[6] - zfEV[1])/2
 
 #Generate spectra
 freq = np.arange(2.77e9,2.97e9,1e6)
-ampArray = np.array([1,1,1,1,1,1,1,1])
+ampArray = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
 simulatedSpectra = lor8(freq,zfArray,ampArray,simulatedEV)
 zfSpectra = lor8(freq,zfArray,ampArray,zfEV)
 
@@ -58,11 +58,30 @@ vectorfield = np.loadtxt('vectorfield.txt', delimiter = ', ', unpack=False)
 #Next comes the actual plotting
 try:
     x,y,z,Bx,By,Bz = zip(*vectorfield)
-    fig = plt.figure(figsize=plt.figaspect(1.))    
-    ax = fig.add_subplot(211,projection='3d')
+    fig = plt.figure(figsize=plt.figaspect(1.))
+    
+    ax = fig.add_subplot(321,projection='3d')
     ax.quiver(x,y,z,Bx,By,Bz,pivot='middle',length=.2,normalize=False)
-    ax = fig.add_subplot(212)
+    
+    ax = fig.add_subplot(323)
     ax.plot(freq,zfSpectra,'b-',freq,simulatedSpectra,'r-')
+    ax.annotate('D = ..., E = ...', xy=(2.88e9,2))
+    
+    ax = fig.add_subplot(322)
+    ax = plt.hist(vectorfield[:,3],bins=100,density=False)
+    ax = plt.xlim(-np.amax(np.absolute(vectorfield[:,3])),\
+                           np.amax(np.absolute(vectorfield[:,3])))
+    
+    ax = fig.add_subplot(324)
+    ax = plt.hist(vectorfield[:,4],bins=100)
+    ax = plt.xlim(-np.amax(np.absolute(vectorfield[:,4])),\
+                           np.amax(np.absolute(vectorfield[:,4])))
+    
+    ax = fig.add_subplot(326)
+    ax = plt.hist(vectorfield[:,5],bins=100)
+    ax = plt.xlim(-np.amax(np.absolute(vectorfield[:,5])),\
+                           np.amax(np.absolute(vectorfield[:,5])))
+    
     plt.draw()
     plt.show()
 except KeyboardInterrupt:
