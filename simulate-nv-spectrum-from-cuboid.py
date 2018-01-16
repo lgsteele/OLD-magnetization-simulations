@@ -8,11 +8,11 @@ from lor8 import lor8
 
 
 
-##magneticFieldCalc(.0011,.0019,.0011,.0019,.002,.0028,\
-##                  .0014,.0016,.0014,.0016,.0014,.0016,\
-##                  5,5,5,\
-##                  5,5,5,\
-##                  0,0,1)
+magneticFieldCalc(.0011,.0019,.0011,.0019,.002,.0028,\
+                  .0014,.0016,.0014,.0016,.0014,.0016,\
+                  5,5,5,\
+                  5,5,5,\
+                  0,0,1)
 
 # Need to generate NV-spectra in each dV and sum signals
 vectorfield = np.loadtxt('vectorfield.txt', \
@@ -41,9 +41,9 @@ for i in range(0,len(vectorfield),1):
 
 # Generate zerofield spectra
 zeroB = np.array([0,0,0])
-ampArray = ampArray*(np.amax(spectraSum)/6.93)
+ampArray = ampArray
 zfEV = eigenvalues(zfArray, zeroB)
-zfSpectra = lor8(freq,zfArray,ampArray,zfEV)
+zfSpectra = lor8(freq,zfArray,ampArray,zfEV)*len(vectorfield)
 
 
 
@@ -80,7 +80,7 @@ simulatedEV = eigenvalues(zfArray, BxyzArray)
 #Generate spectra
 ##freq = np.arange(2.77e9,2.97e9,1e6)
 ##ampArray = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
-simulatedSpectra = lor8(freq,zfArray,ampArray,simulatedEV)
+simulatedSpectra = lor8(freq,zfArray,ampArray,simulatedEV) * len(vectorfield)
 ##zfSpectra = lor8(freq,zfArray,ampArray,zfEV)
 
 
