@@ -8,13 +8,46 @@ from lor8 import lor8
 
 
 
-magneticFieldCalc(.0011,.0019,.0011,.0019,.002,.0028,\
-                  .0014,.0016,.0014,.0016,.0014,.0016,\
-                  5,5,5,\
-                  5,5,5,\
-                  0,1,0)
+##magneticFieldCalc(.0011,.0019,.0011,.0019,.002,.0028,\
+##                  .0014,.0016,.0014,.0016,.0014,.0016,\
+##                  5,5,5,\
+##                  5,5,5,\
+##                  0,0,1)
 
-#Upload Bavg data from magneticFieldCalc
+# Need to generate NV-spectra in each dV and sum signals
+vectorfield = np.loadtxt('vectorfield.txt', \
+                         delimiter = ', ', unpack=False)
+# Need to isolate the magnetic field components of the array
+# (required for NVeigenvalues.py)
+BArray = np.delete(np.copy(vectorfield),(0,1,2),axis=1)
+zfArray = np.array([2.87e9,3e6,2e6,0])
+# there are 8 eigenvalues for each dV
+# add 8 EV columns to vectorfield matrix
+vectorfield = np.column_stack((vectorfield,\
+                               np.zeros((len(vectorfield),8))))
+# Calculate eigenvalues for each dV:
+for i in range(0,len(vectorfield),1):
+    simulatedEV = eigenvalues(zfArray,BArray[i,:])
+    vectorfield[i,6:14] = simulatedEV
+# Isolate eigenvalue array
+evArray = np.delete(vectorfield,(0,1,2,3,4,5),axis=1)
+# Generate summed spectra for B-field distribution
+freq = np.arange(2.82e9,2.92e9,1e6)
+ampArray = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
+spectraSum = np.zeros(len(freq))
+for i in range(0,len(vectorfield),1):
+    simulatedSpectra = lor8(freq,zfArray,ampArray,evArray[i,:])
+    spectraSum = spectraSum + simulatedSpectra
+
+# Generate zerofield spectra
+zeroB = np.array([0,0,0])
+ampArray = ampArray*(np.amax(spectraSum)/6.93)
+zfEV = eigenvalues(zfArray, zeroB)
+zfSpectra = lor8(freq,zfArray,ampArray,zfEV)
+
+
+
+###Upload Bavg data from magneticFieldCalc
 Bxavg, Byavg, Bzavg, Bxstd, Bystd, Bzstd = \
        np.loadtxt('BavgArray.txt', delimiter = ', ', unpack=True)
 BxyzArray = np.array([Bxavg, Byavg, Bzavg, Bxstd, Bystd, Bzstd])
@@ -31,41 +64,42 @@ Size of Co sample: unknown
 Given zfArray = zero field, (simulatedEV[6] - simulatedEV[1])/2 should equal ~4.4e6
 To properly confirm this, need to include Bstd in error
 '''
-zfArray = np.array([2.87078235e+09, 2.97186918e+06, 2.27586711e+06,0])
+##zfArray = np.array([2.87078235e+09, 2.97186918e+06, 2.27586711e+06,0])
 simulatedEV = eigenvalues(zfArray, BxyzArray)
 #Calculate eigenvalues for zero-field
-zeroB = np.array([0,0,0,0,0,0])
-zfEV = eigenvalues(zfArray, zeroB)
+##zeroB = np.array([0,0,0,0,0,0])
+##zfEV = eigenvalues(zfArray, zeroB)
 #Print eigenvalues for reference
-print 'ZF: ' + str(zfEV) + '\n'
-print 'simulated: ' + str(simulatedEV) + '\n'
-print (simulatedEV[6] - simulatedEV[1])/2
-print (zfEV[6] - zfEV[1])/2
+##print 'ZF: ' + str(zfEV) + '\n'
+##print 'simulated: ' + str(simulatedEV) + '\n'
+##print (simulatedEV[6] - simulatedEV[1])/2
+##print (zfEV[6] - zfEV[1])/2
 
 
 
 #Generate spectra
-freq = np.arange(2.77e9,2.97e9,1e6)
-ampArray = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
+##freq = np.arange(2.77e9,2.97e9,1e6)
+##ampArray = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
 simulatedSpectra = lor8(freq,zfArray,ampArray,simulatedEV)
-zfSpectra = lor8(freq,zfArray,ampArray,zfEV)
+##zfSpectra = lor8(freq,zfArray,ampArray,zfEV)
 
 
 
 #Plot vectorfield and spectra results
 #First need to upload vectorfield data
-vectorfield = np.loadtxt('vectorfield.txt', delimiter = ', ', unpack=False)
+##vectorfield = np.loadtxt('vectorfield.txt', delimiter = ', ', unpack=False)
 #Next comes the actual plotting
 try:
-    x,y,z,Bx,By,Bz = zip(*vectorfield)
+    x,y,z,Bx,By,Bz,e1,e2,e3,e4,e5,e6,e7,e8 = zip(*vectorfield)
     fig = plt.figure(figsize=plt.figaspect(1.))
     
     ax = fig.add_subplot(321,projection='3d')
     ax.quiver(x,y,z,Bx,By,Bz,pivot='middle',length=.2,normalize=False)
     
     ax = fig.add_subplot(323)
-    ax.plot(freq,zfSpectra,'b-',freq,simulatedSpectra,'r-')
-    ax.annotate('D = ..., E = ...', xy=(2.88e9,2))
+    ax.plot(freq,zfSpectra,'b-',freq,spectraSum,'r-',freq,simulatedSpectra,'g-')
+##    ax.plot(freq,simulatedSpectra,'r-')
+    ax.annotate('blue = zero field \n red = sum over volumes \n green = avg', xy=(2.88e9,300))
     
     ax = fig.add_subplot(322)
     ax = plt.hist(vectorfield[:,3],bins=100,density=False)
